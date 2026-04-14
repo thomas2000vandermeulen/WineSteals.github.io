@@ -498,79 +498,51 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
     const wines = [];
 
     for (const line of lines) {
-      // Skip sectie headers (korte regels zonder prijs, of puur tekst)
-      if (line.match(/^[A-Z\s\/]+$/) && line.length < 30) continue;
+      if (line.match(/^[A-Z\s\/\-&]+$/) && line.length < 35) continue;
       if (line.startsWith('*') && line.length < 20) continue;
+      // Skip halve flesjes
+      if (line.match(/\(0[,.][135678]\d*\s*l\)|1\/2\s*fles|halve\s*fles|0,375|0,187/i)) continue;
 
-      // Prijs eruit halen — probeer meerdere formaten
-      // Formaat 1: €95, €95.00, € 95
-      let priceMatch = line.match(/€\s?(\d+[.,]?\d*)/);
-      // Formaat 2: getal aan het einde van de regel (Rijsel stijl: "...Gamay 70")
-      if (!priceMatch) {
-        priceMatch = line.match(/\s(\d{2,4}(?:[.,]\d{1,2})?)\s*\*?\s*$/);
-      }
+      let priceMatch = line.match(/\u20ac\s?(\d+[.,]?\d*)/);
+      if (!priceMatch) priceMatch = line.match(/\s(\d{2,4}(?:[.,]\d{1,2})?)\s*\*?\s*$/);
       if (!priceMatch) continue;
 
       const price = parseFloat(priceMatch[1].replace(',', '.'));
-      if (price < 5 || price > 10000) continue;
+      if (price < 8 || price > 10000) continue;
 
-      // Jaargang eruit halen
       const vintageMatch = line.match(/\b(19|20)\d{2}\b/);
       const vintage = vintageMatch ? parseInt(vintageMatch[0]) : null;
+      const isNV = /\bn\.?v\.?\b/i.test(line);
 
-      // Prijs, jaargang, scheidingstekens en extra info verwijderen
       let cleaned = line
-        .replace(/€\s?\d+[.,]?\d*/g, '')
-        .replace(/\s\d{2,4}(?:[.,]\d{1,2})?\s*\*?\s*$/, '') // prijs aan einde
-        .replace(/\b(19|20)\d{2}\b/, '')           // jaargang
-        .replace(/\s*[-–—]\s*/g, ' ')              // streepjes
-        .replace(/\([^)]*\)/g, '')                 // haakjes
-        .replace(/\*+/g, '')                        // sterretjes
-        .replace(/\s+/g, ' ')
-        .trim();
+        .replace(/\u20ac\s?\d+[.,]?\d*/g, '')
+        .replace(/\s\d{2,4}(?:[.,]\d{1,2})?\s*\*?\s*$/, '')
+        .replace(/\b(19|20)\d{2}\b/, '')
+        .replace(/\bn\.?v\.?\b\s*[-\u2013\u2014]?\s*/gi, '')
+        .replace(/\s*[-\u2013\u2014]\s*/g, ' ')
+        .replace(/\([^)]*\)/g, '')
+        .replace(/\*+/g, '')
+        .replace(/\s+/g, ' ').trim();
 
-      // Naam en producent scheiden
-      // Bij Rijsel stijl: "Wachau, F.X. Pichler, 'Kellerberg', Smaragd Riesling"
-      // → regio weggooien, producent en wijn pakken
       const parts = cleaned.split(',').map(p => p.trim()).filter(p => p.length > 1);
+      let name = '', producer = '';
 
-      let name = '';
-      let producer = '';
+      const regionPattern = /^(Alsace|Wachau|Loire|Bordeaux|Bourgogne|Rh.ne|Rioja|Champagne|Jura|Savoie|Provence|Corse|Mosel|Nahe|Pfalz|Baden|Rheingau|Piemonte|Toscane|Toscana|Veneto|Galicia|Languedoc|Roussillon|C.tes|C.te|Pays|Vin de|IGP|IGT|VdF|Sauternes|Barsac|Pomerol|Margaux|Pauillac|Saint|Pessac|Graves|M.doc|Carnuntum|Burgenland|Kamptal|Beaujolais|Muscadet|Anjou|Vouvray|Sancerre|Pouilly|Bandol|Gigondas|Vacqueyras|Crozes|Hermitage|Cornas|Condrieu|Arbois|Barolo|Barbaresco|Chianti|Brunello|Amarone|Soave|Priorat|Ribera|Chablis|Meursault|Puligny|Chassagne|Nuits|Gevrey|Volnay|Pommard|Beaune|Vaucluse)/i;
 
       if (parts.length >= 2) {
-        // Eerste deel is regio of wijntype, tweede is producent/wijn
-        // Heuristiek: als eerste deel < 30 chars en lijkt op regio → skip
-        const firstIsRegion = parts[0].match(/^(Alsace|Wachau|Loire|Bordeaux|Bourgogne|Rhône|Rioja|Champagne|Jura|Savoie|Provence|Corse|Mosel|Nahe|Pfalz|Baden|Rheingau|Piemonte|Toscane|Veneto|Sicilië|Galicia|Languedoc|Roussillon|Côtes|Côte|Pays|Vin de|IGP|IGT|VdF)/i);
-        if (firstIsRegion && parts.length > 2) {
-          producer = parts[1];
-          name = parts.slice(2).join(', ');
-        } else if (firstIsRegion && parts.length === 2) {
-          producer = '';
-          name = parts[1];
-        } else {
-          name = parts[0];
-          producer = parts[1] || '';
-        }
-      } else {
-        name = cleaned;
-      }
+        const firstIsRegion = parts[0].match(regionPattern);
+        if (firstIsRegion && parts.length > 2) { producer = parts[1]; name = parts.slice(2).join(', '); }
+        else if (firstIsRegion) { producer = ''; name = parts[1]; }
+        else { name = parts[0]; producer = parts[1] || ''; }
+      } else { name = cleaned; }
 
-      // Druivensoorten verwijderen van naam (staan vaak achteraan)
-      const grapeKeywords = /\b(Pinot Noir|Pinot Gris|Pinot Blanc|Chardonnay|Riesling|Gamay|Syrah|Grenache|Cabernet|Merlot|Nebbiolo|Sangiovese|Sauvignon|Chenin|Viognier|Roussanne|Marsanne|Mourvèdre|Tempranillo|Albariño|Blaufränkisch|Auxerrois|Trousseau|Poulsard|Savagnin|Jacquère|Altesse|Melon de Bourgogne|Carignan|Cinsault|Clairette|Muscat|Gewürztraminer|Semillon|Barbera|Dolcetto|Corvina|Pinot Meunier|Pinot Auxerrois)\b/gi;
-      name = name.replace(grapeKeywords, '').replace(/[,\s]+$/, '').trim();
-
-      // Quotes en extra aanhalingstekens opruimen
-      name = name.replace(/['''""]/g, '').trim();
+      const grapeKw = /\b(Pinot Noir|Pinot Gris|Pinot Blanc|Chardonnay|Riesling|Gamay|Syrah|Grenache|Cabernet Sauvignon|Cabernet Franc|Cabernet|Merlot|Nebbiolo|Sangiovese|Sauvignon Blanc|Sauvignon|Chenin Blanc|Chenin|Viognier|Roussanne|Marsanne|Mourv.dre|Tempranillo|Albar.o|Blaufr.nkisch|Auxerrois|Trousseau|Poulsard|Savagnin|Jacqu.re|Altesse|Melon de Bourgogne|Carignan|Cinsault|Clairette|Muscat Ottonel|Muscat|Gewurztraminer|Gew.rztraminer|Semillon|S.millon|Barbera|Dolcetto|Corvina|Pinot Meunier|Pinot Auxerrois|Petit Verdot|Sciaccarellu|Nerello Mascalese)\b/gi;
+      name = name.replace(grapeKw, '').replace(/\bo\.a\.\b/gi, '').replace(/[,\s]+$/, '').replace(/\s+/g, ' ').trim();
+      name = name.replace(/[\u2018\u2019\u201c\u201d'"]/g, '').trim();
+      producer = producer.replace(grapeKw, '').replace(/[\u2018\u2019\u201c\u201d'"]/g, '').trim();
 
       if (name.length < 3) continue;
-
-      wines.push({
-        raw: line,
-        name,
-        producer: producer.replace(/['''""]/g, '').trim(),
-        vintage,
-        listPrice: price
-      });
+      wines.push({ raw: line, name, producer, vintage: isNV ? null : vintage, listPrice: price, isNV });
     }
     return wines;
   }
@@ -578,57 +550,97 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
   /* ── MATCH WINE AGAINST DATABASE ── */
   async function matchWine(parsed) {
     const fields = 'id,name,producer,vintage,region,country,colour,grape,market_price_eur,market_price_min,market_price_max,critic_score';
-    const enc = s => encodeURIComponent(s);
+    const enc = s => encodeURIComponent(s.trim());
 
-    // Bouw zoektermen op basis van wat we hebben
-    const nameParts = parsed.name.split(' ').filter(w => w.length > 2).slice(0, 3);
-    const producerFirst = parsed.producer ? parsed.producer.split(' ')[0] : '';
+    const nameParts = parsed.name.split(' ').filter(w => w.length > 2).slice(0, 4);
+    const producerParts = parsed.producer ? parsed.producer.split(' ').filter(w => w.length > 1) : [];
+    const producerFirst = producerParts[0] || '';
+    const producerSecond = producerParts[1] || '';
+
+    // Minimum match score om als geldig te beschouwen
+    // Zo voorkom je dat een andere producent uit dezelfde appellation wordt gebruikt
+    const MIN_CONFIDENCE = 3;
+
+    function scoreMatch(w) {
+      let score = 0;
+      const wName = (w.name || '').toLowerCase();
+      const wProducer = (w.producer || '').toLowerCase();
+      const pName = parsed.name.toLowerCase();
+      const pProducer = parsed.producer.toLowerCase();
+
+      // NAAM match — zwaarst gewogen
+      if (wName === pName) score += 10;
+      else if (wName.includes(pName) || pName.includes(wName)) score += 6;
+      else if (nameParts.some(p => wName.includes(p.toLowerCase()))) score += 2;
+
+      // PRODUCENT match — even belangrijk
+      if (producerFirst) {
+        if (wProducer.includes(producerFirst.toLowerCase())) score += 8;
+        else if (producerSecond && wProducer.includes(producerSecond.toLowerCase())) score += 4;
+        // Straf als producent totaal niet matcht — voorkomt verkeerde match
+        else if (pProducer.length > 2 && !wProducer.includes(pProducer.split(' ')[0].toLowerCase())) score -= 5;
+      }
+
+      // JAARGANG match — bonus
+      if (parsed.vintage && w.vintage === parsed.vintage) score += 3;
+      else if (parsed.vintage && w.vintage && Math.abs(parsed.vintage - w.vintage) <= 2) score += 1;
+
+      return score;
+    }
 
     try {
-      let wines = [];
+      let candidates = [];
 
-      // Strategie 1: naam + producent combo
+      // Strategie 1 — naam + producent (meest specifiek, hoogste prioriteit)
       if (producerFirst && nameParts.length) {
-        wines = await querySupabase('wines',
+        candidates = await querySupabase('wines',
           `?producer=ilike.*${enc(producerFirst)}*&name=ilike.*${enc(nameParts[0])}*&limit=5&select=${fields}`);
       }
 
-      // Strategie 2: alleen naam (meerdere woorden)
-      if (!wines.length && nameParts.length >= 2) {
-        wines = await querySupabase('wines',
-          `?name=ilike.*${enc(nameParts.slice(0,2).join(' '))}*&limit=5&select=${fields}`);
-      }
-
-      // Strategie 3: alleen naam eerste woord + appellation match
-      if (!wines.length && nameParts.length) {
-        wines = await querySupabase('wines',
-          `?name=ilike.*${enc(nameParts[0])}*&limit=5&select=${fields}`);
-      }
-
-      // Strategie 4: producent als naam (bijv "Jamet" als naam gedetecteerd)
-      if (!wines.length && producerFirst) {
-        wines = await querySupabase('wines',
+      // Strategie 2 — producent alleen (voor gevallen als "Jamet" als wijnaam)
+      if (!candidates.length && producerFirst) {
+        const res = await querySupabase('wines',
           `?producer=ilike.*${enc(producerFirst)}*&limit=5&select=${fields}`);
+        // Alleen accepteren als naam ook een beetje matcht
+        candidates = res.filter(w =>
+          nameParts.some(p => (w.name || '').toLowerCase().includes(p.toLowerCase())) ||
+          (w.name || '').toLowerCase().includes(producerFirst.toLowerCase())
+        );
       }
 
-      if (!wines.length) return null;
-
-      // Beste match: score op basis van jaargang match + naam gelijkenis
-      let best = wines[0];
-      let bestScore = 0;
-
-      for (const w of wines) {
-        let score = 0;
-        // Jaargang match
-        if (parsed.vintage && w.vintage === parsed.vintage) score += 3;
-        // Naam bevat zoeknaam
-        const wName = (w.name || '').toLowerCase();
-        const pName = parsed.name.toLowerCase();
-        if (wName.includes(pName) || pName.includes(wName.split(' ')[0])) score += 2;
-        // Producent match
-        if (producerFirst && (w.producer || '').toLowerCase().includes(producerFirst.toLowerCase())) score += 2;
-        if (score > bestScore) { bestScore = score; best = w; }
+      // Strategie 3 — naam meerdere woorden, GEEN producent vereist
+      // maar dan moet de score hoog genoeg zijn zonder producent
+      if (!candidates.length && nameParts.length >= 2) {
+        candidates = await querySupabase('wines',
+          `?name=ilike.*${enc(nameParts.slice(0, 2).join(' '))}*&limit=5&select=${fields}`);
       }
+
+      // Strategie 4 — naam eerste woord, maar ALLEEN als we ook producent hebben
+      // en die producent matcht — zo voorkom je verkeerde appellation matches
+      if (!candidates.length && nameParts.length && producerFirst) {
+        const res = await querySupabase('wines',
+          `?name=ilike.*${enc(nameParts[0])}*&limit=10&select=${fields}`);
+        // Filter streng: producent moet matchen
+        candidates = res.filter(w =>
+          (w.producer || '').toLowerCase().includes(producerFirst.toLowerCase()) ||
+          (producerSecond && (w.producer || '').toLowerCase().includes(producerSecond.toLowerCase()))
+        );
+      }
+
+      if (!candidates.length) return null;
+
+      // Beste match bepalen op basis van score
+      let best = null;
+      let bestScore = MIN_CONFIDENCE - 1; // onder minimum = geen match
+
+      for (const w of candidates) {
+        const s = scoreMatch(w);
+        if (s > bestScore) { bestScore = s; best = w; }
+      }
+
+      // Als de beste match onder de minimumdrempel zit → geen match
+      // Dit voorkomt dat een random wijn uit dezelfde appellation wordt gebruikt
+      if (!best || bestScore < MIN_CONFIDENCE) return null;
 
       return best;
     } catch (e) {
@@ -829,9 +841,19 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
           marketPrice,
           score: score ?? 50,
           matched: !!db,
-          criticScore: db?.critic_score
+          criticScore: db?.critic_score,
+          rawName: p.name,
+          rawProducer: p.producer
         };
       });
+
+      // Niet-herkende wijnen opslaan als pending in Supabase
+      const unmatched = allMatches.filter(({ db, parsed: p }) =>
+        !db && p.name && p.name.length > 3 && p.producer && p.producer.length > 2
+      );
+      if (unmatched.length > 0) {
+        savePendingWines(unmatched.map(({ parsed: p }) => p), scannedRestaurant);
+      }
 
       // Klaar
       document.getElementById(steps[3]).classList.remove('active');
@@ -854,6 +876,58 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
   }
 
   function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  /* ── PENDING WIJNEN OPSLAAN ── */
+  async function savePendingWines(parsedWines, restaurant) {
+    // Sla niet-herkende wijnen op als pending — maar controleer eerst of ze al bestaan
+    for (const p of parsedWines) {
+      try {
+        // Check of er al een pending entry is met dezelfde naam + producent
+        const existing = await querySupabase('wines',
+          `?price_source=eq.pending&name=ilike.*${encodeURIComponent(p.name.slice(0,20))}*&producer=ilike.*${encodeURIComponent(p.producer.split(' ')[0])}*&limit=1&select=id,seen_count`);
+
+        if (existing.length > 0) {
+          // Al bekend — update de teller en restaurantnaam
+          await fetch(`${SUPABASE_URL}/rest/v1/wines?id=eq.${existing[0].id}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              seen_count: (existing[0].seen_count || 1) + 1,
+              seen_list_price: p.listPrice,
+              seen_at_restaurant: restaurant
+            })
+          });
+        } else {
+          // Nieuw — toevoegen als pending
+          await fetch(`${SUPABASE_URL}/rest/v1/wines`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: p.name,
+              producer: p.producer,
+              vintage: p.vintage || null,
+              colour: 'red', // default, admin kan aanpassen
+              country: 'France', // default
+              price_source: 'pending',
+              seen_list_price: p.listPrice,
+              seen_at_restaurant: restaurant,
+              seen_count: 1
+            })
+          });
+        }
+      } catch (e) {
+        console.warn('Kon pending wijn niet opslaan:', p.name, e);
+      }
+    }
+  }
 
   function showError() {
     document.getElementById('upload-section').style.display = 'block';

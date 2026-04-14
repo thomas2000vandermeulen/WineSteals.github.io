@@ -124,6 +124,21 @@
     .loading { text-align:center; padding:3rem; font-family:'DM Mono',monospace; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
     .empty { text-align:center; padding:2rem; font-size:0.88rem; color:var(--muted); font-weight:300; }
 
+    /* PENDING KAARTJES */
+    .pending-card { background:white; border:0.5px solid var(--border); border-left:3px solid var(--gold); border-radius:3px; padding:1.1rem 1.25rem; margin-bottom:0.75rem; display:grid; grid-template-columns:1fr auto; gap:1rem; align-items:center; }
+    .pending-wine-name { font-family:'Playfair Display',serif; font-style:italic; font-size:0.95rem; color:var(--ink); margin-bottom:0.25rem; }
+    .pending-meta { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.08em; color:var(--muted); }
+    .pending-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .pending-price-input { width:90px; padding:0.5rem 0.75rem; background:var(--cream); border:0.5px solid var(--border); border-radius:2px; font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--ink); outline:none; text-align:center; }
+    .pending-price-input:focus { border-color:var(--wine); background:white; }
+    .btn-approve { background:var(--green); color:white; border:none; padding:0.5rem 1rem; border-radius:2px; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; cursor:pointer; white-space:nowrap; }
+    .btn-approve:hover { background:#1B5E20; }
+    .btn-approve:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-ws-small { background:transparent; color:var(--wine); border:0.5px solid var(--border); padding:0.5rem 0.75rem; border-radius:2px; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.08em; cursor:pointer; text-decoration:none; white-space:nowrap; }
+    .btn-ws-small:hover { border-color:var(--wine); }
+    .btn-dismiss { background:transparent; color:var(--muted); border:none; font-size:1rem; cursor:pointer; padding:0.25rem; line-height:1; }
+    .pending-seen { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.06em; color:var(--gold); background:rgba(201,168,76,0.1); padding:2px 7px; border-radius:1px; margin-left:6px; }
+
     @media (max-width:700px) {
       .stats-bar { grid-template-columns:1fr 1fr; }
       .form-grid { grid-template-columns:1fr; }
@@ -162,6 +177,16 @@
     <div class="stat-box"><div class="stat-num" id="stat-red">—</div><div class="stat-label">Rood</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-white">—</div><div class="stat-label">Wit</div></div>
     <div class="stat-box"><div class="stat-num green" id="stat-today">0</div><div class="stat-label">Vandaag toegevoegd</div></div>
+  </div>
+
+  <!-- TO DO — PENDING WIJNEN -->
+  <div id="pending-section" style="display:none; margin-bottom:2.5rem;">
+    <div class="section-eyebrow" style="margin-bottom:0.75rem;">⚠️ Te doen — prijzen ontbreken</div>
+    <div class="section-header" style="margin-bottom:1rem;">
+      <div class="section-title">Wijnen gevonden bij scan maar nog zonder marktprijs</div>
+      <span id="pending-count" style="font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;color:var(--gold);background:var(--wine-dark);padding:4px 12px;border-radius:2px;">0 te doen</span>
+    </div>
+    <div id="pending-list"></div>
   </div>
 
   <!-- WINE-SEARCHER CALL TRACKER -->
@@ -340,13 +365,123 @@
   async function init() {
     updateCallTracker();
     document.getElementById('stat-today').textContent = todayAdded;
-    await loadWines();
+    await Promise.all([loadWines(), loadPendingWines()]);
+  }
+
+  /* ── PENDING WIJNEN LADEN ── */
+  async function loadPendingWines() {
+    try {
+      const pending = await sb('wines?price_source=eq.pending&select=id,name,producer,vintage,colour,seen_list_price,seen_at_restaurant,seen_count&order=seen_count.desc&limit=50');
+      renderPending(pending);
+    } catch(e) {
+      console.warn('Pending laden mislukt:', e);
+    }
+  }
+
+  function renderPending(wines) {
+    const section = document.getElementById('pending-section');
+    const list = document.getElementById('pending-list');
+    const count = document.getElementById('pending-count');
+
+    if (!wines.length) { section.style.display = 'none'; return; }
+
+    section.style.display = 'block';
+    count.textContent = `${wines.length} te doen`;
+
+    list.innerHTML = wines.map(w => {
+      const wsQuery = encodeURIComponent([w.name, w.producer, w.vintage].filter(Boolean).join(' '));
+      const seenLabel = w.seen_count > 1 ? `<span class="pending-seen">${w.seen_count}× gezien</span>` : '';
+      return `
+        <div class="pending-card" id="pending-${w.id}">
+          <div>
+            <div class="pending-wine-name">${w.name} ${seenLabel}</div>
+            <div class="pending-meta">
+              ${w.producer || '?'} · ${w.vintage || 'NV'}
+              ${w.seen_at_restaurant ? ' · gezien bij ' + w.seen_at_restaurant : ''}
+              ${w.seen_list_price ? ' · kaartprijs €' + w.seen_list_price : ''}
+            </div>
+          </div>
+          <div class="pending-actions">
+            <a class="btn-ws-small" href="https://www.wine-searcher.com/find/${wsQuery}/1/nl/eur" target="_blank" onclick="trackCall()">🔍 Wine-Searcher</a>
+            <input class="pending-price-input" type="number" placeholder="€ markt" id="price-${w.id}" step="0.5" min="1" />
+            <button class="btn-approve" onclick="approvePending('${w.id}')">✓ Opslaan</button>
+            <button class="btn-dismiss" onclick="dismissPending('${w.id}')" title="Verwijderen">×</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ── PENDING WIJN GOEDKEUREN ── */
+  async function approvePending(id) {
+    const priceInput = document.getElementById(`price-${id}`);
+    const price = parseFloat(priceInput.value);
+    if (!price || price < 1) {
+      priceInput.focus();
+      priceInput.style.borderColor = 'var(--wine)';
+      return;
+    }
+
+    const btn = document.querySelector(`#pending-${id} .btn-approve`);
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      await sb(`wines?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          market_price_eur: price,
+          market_price_min: Math.round(price * 0.80),
+          market_price_max: Math.round(price * 1.30),
+          price_source: 'wine-searcher',
+          price_updated_at: new Date().toISOString()
+        })
+      });
+
+      // Kaartje verwijderen + teller bijwerken
+      document.getElementById(`pending-${id}`)?.remove();
+      todayAdded++;
+      localStorage.setItem('ws_today_added', todayAdded);
+      document.getElementById('stat-today').textContent = todayAdded;
+
+      // Teller bijwerken
+      const remaining = document.querySelectorAll('[id^="pending-"]').length;
+      document.getElementById('pending-count').textContent = `${remaining} te doen`;
+      if (!remaining) document.getElementById('pending-section').style.display = 'none';
+
+      // Database tabel verversen
+      await loadWines();
+    } catch(e) {
+      alert('Fout: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '✓ Opslaan';
+    }
+  }
+
+  /* ── PENDING WIJN AFWIJZEN ── */
+  async function dismissPending(id) {
+    if (!confirm('Wijn verwijderen uit de to-do lijst?')) return;
+    try {
+      await sb(`wines?id=eq.${id}`, { method: 'DELETE' });
+      document.getElementById(`pending-${id}`)?.remove();
+      const remaining = document.querySelectorAll('[id^="pending-"]').length;
+      document.getElementById('pending-count').textContent = `${remaining} te doen`;
+      if (!remaining) document.getElementById('pending-section').style.display = 'none';
+    } catch(e) {
+      alert('Fout: ' + e.message);
+    }
+  }
+
+  function trackCall() {
+    callsUsed = Math.min(100, callsUsed + 1);
+    localStorage.setItem('ws_calls_today', callsUsed);
+    updateCallTracker();
   }
 
   /* ── LOAD WINES ── */
   async function loadWines() {
     try {
-      const wines = await sb('wines?select=id,name,producer,vintage,region,country,colour,market_price_eur&order=created_at.desc&limit=500');
+      const wines = await sb('wines?price_source=neq.pending&select=id,name,producer,vintage,region,country,colour,market_price_eur&order=created_at.desc&limit=500');
       allWines = wines;
       updateStats(wines);
       renderTable(wines);
