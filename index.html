@@ -409,28 +409,15 @@
       <div class="wine-bg-pattern"></div>
       <div class="scan-card">
         <div class="scan-header">
-          <span>De Kas · Amsterdam</span>
+          <span id="hero-scan-label">WineSteals database</span>
           <span><span class="pulse-dot"></span><span data-key="scanning"></span></span>
         </div>
-        <div class="wine-item steal">
-          <div><div class="wine-name-card">Gevrey-Chambertin 1er Cru</div><div class="wine-meta-card">Rossignol-Trapet · 2019</div></div>
-          <div class="wine-right"><div class="wine-price">€95</div><div class="steal-badge" data-key="stealBadge"></div><div class="score-bar"><div class="score-fill" style="width:88%"></div></div></div>
-        </div>
-        <div class="wine-item steal">
-          <div><div class="wine-name-card">Rías Baixas Albariño</div><div class="wine-meta-card">Do Ferreiro · 2022</div></div>
-          <div class="wine-right"><div class="wine-price">€42</div><div class="steal-badge" data-key="stealBadge"></div><div class="score-bar"><div class="score-fill" style="width:74%"></div></div></div>
-        </div>
-        <div class="wine-item">
-          <div><div class="wine-name-card">Barolo DOCG</div><div class="wine-meta-card">Fontanafredda · 2018</div></div>
-          <div class="wine-right"><div class="wine-price">€110</div><div class="score-bar"><div class="score-fill" style="width:38%"></div></div></div>
-        </div>
-        <div class="wine-item">
-          <div><div class="wine-name-card">Pouilly-Fumé</div><div class="wine-meta-card">Dagueneau · 2021</div></div>
-          <div class="wine-right"><div class="wine-price">€135</div><div class="score-bar"><div class="score-fill" style="width:22%"></div></div></div>
+        <div id="hero-wine-list">
+          <div style="padding:1.5rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted,#6B5E52);">Laden...</div>
         </div>
         <div class="scan-footer">
           <span data-key="winesAnalysed"></span>
-          <span class="steals-count" data-key="stealsFound"></span>
+          <span class="steals-count" id="hero-steals-count"></span>
         </div>
       </div>
     </div>
@@ -460,21 +447,10 @@
       <div>
         <div class="live-feed">
           <div class="live-feed-header"><span class="pulse-dot"></span><span data-key="liveUpdates"></span></div>
-          <div class="feed-item">
-            <div><div class="feed-restaurant">Bord'Eau</div><div class="feed-wine">Chambolle-Musigny · Drouhin · 2018</div></div>
-            <div class="feed-badge" data-key="stealBadge"></div>
-          </div>
-          <div class="feed-item">
-            <div><div class="feed-restaurant">Rijks Restaurant</div><div class="feed-wine">Grüner Veltliner · Pichler · 2021</div></div>
-            <div class="feed-badge" data-key="stealBadge"></div>
-          </div>
-          <div class="feed-item">
-            <div><div class="feed-restaurant">Vermeer</div><div class="feed-wine">Barolo Cannubi · Borgogno · 2017</div></div>
-            <div class="feed-badge" data-key="stealBadge"></div>
-          </div>
-          <div class="feed-item">
-            <div><div class="feed-restaurant">De Kas</div><div class="feed-wine">Rías Baixas Albariño · Do Ferreiro</div></div>
-            <div class="feed-badge" data-key="stealBadge"></div>
+          <div id="live-feed-items">
+            <div style="padding:1rem 0;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;color:rgba(255,255,255,0.3);text-align:center;">
+              Scan een wijnkaart om hier te verschijnen
+            </div>
           </div>
           <div class="feed-footer" data-key="lastUpdated"></div>
         </div>
@@ -495,36 +471,17 @@
           <li class="feature-item"><div class="feature-icon">⭐</div><div class="feature-text"><strong data-key="f3title"></strong><span data-key="f3desc"></span></div></li>
           <li class="feature-item"><div class="feature-icon">📍</div><div class="feature-text"><strong data-key="f4title"></strong><span data-key="f4desc"></span></div></li>
         </ul>
+        <a href="scan.html" class="btn-primary" style="margin-top:2rem;display:inline-block;" data-key="heroCta1"></a>
       </div>
       <div>
         <div class="result-card">
           <div class="result-header">
-            <div class="result-header-title">Bord'Eau · Amsterdam</div>
+            <div class="result-header-title" id="live-steals-title">Top steals uit de database</div>
             <div class="result-header-meta" data-key="rankedBy"></div>
           </div>
-          <div class="result-row top-steal">
-            <div class="steal-bar"></div>
-            <div class="r-name"><div class="r-wine">Chambolle-Musigny 1er Cru</div><div class="r-region">CÔTE DE NUITS · DROUHIN · 2018</div></div>
-            <div class="r-prices"><div class="r-list-price">€88</div><div class="r-market"><span data-key="market"></span> ~€160</div></div>
-            <div class="score-circle high">94</div>
-          </div>
-          <div class="result-row top-steal">
-            <div class="steal-bar"></div>
-            <div class="r-name"><div class="r-wine">Grüner Veltliner Smaragd</div><div class="r-region">WACHAU · PICHLER · 2020</div></div>
-            <div class="r-prices"><div class="r-list-price">€55</div><div class="r-market"><span data-key="market"></span> ~€90</div></div>
-            <div class="score-circle high">81</div>
-          </div>
-          <div class="result-row">
-            <div class="steal-bar none"></div>
-            <div class="r-name"><div class="r-wine">Sassicaia DOC</div><div class="r-region">BOLGHERI · TENUTA SAN GUIDO · 2019</div></div>
-            <div class="r-prices"><div class="r-list-price">€290</div><div class="r-market"><span data-key="market"></span> ~€280</div></div>
-            <div class="score-circle">31</div>
-          </div>
-          <div class="result-row">
-            <div class="steal-bar none"></div>
-            <div class="r-name"><div class="r-wine">Cloudy Bay Sauvignon Blanc</div><div class="r-region">MARLBOROUGH · 2023</div></div>
-            <div class="r-prices"><div class="r-list-price">€68</div><div class="r-market"><span data-key="market"></span> ~€22</div></div>
-            <div class="score-circle">8</div>
+          <div id="live-steals-list">
+            <!-- Wordt dynamisch gevuld vanuit Supabase -->
+            <div style="padding:2rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted,#6B5E52);">Laden...</div>
           </div>
         </div>
       </div>
@@ -864,15 +821,9 @@
     };
 
     /* ── TICKER DATA ──────────────────────────────── */
-    const tickerItems = [
-      'Chambolle-Musigny · Bord\'Eau · €88 vs €160 market',
-      'Grüner Veltliner Smaragd · Rijks · €55 vs €90 market',
-      'Gevrey-Chambertin 1er Cru · De Kas · €95 vs €180 market',
-      'Barolo Cannubi · Vermeer · €120 vs €210 market',
-      'Rías Baixas Albariño · De Kas · €42 vs €75 market',
-      'Meursault · Brasserie Blanc · €78 vs €135 market',
-      'Ribera del Duero Reserva · Café de Paris · €65 vs €110 market',
-    ];
+    // Ticker wordt gevuld zodra er echte scan data beschikbaar is
+    // TODO: laden vanuit Supabase scan resultaten
+    const tickerItems = [];
 
     /* ── STATE ────────────────────────────────────── */
     let lang = window._wsLang || 'en';
@@ -948,8 +899,98 @@
     render();
     renderCookieBanner();
     showCookieBanner();
+    loadLiveSteals();
 
   }); // end DOMContentLoaded
+
+  /* ── LIVE STEALS VANUIT SUPABASE ── */
+  async function loadLiveSteals() {
+    const SB_URL = 'https://kdhczlabjecqxlyuxprl.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGN6bGFiamVjcXhseXV4cHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDI1MzEsImV4cCI6MjA5MTU3ODUzMX0.9vpr3P0Q6xhs_99nLsU_yE3Ht6prPe9cPjUrt0f5mX4';
+    const isNL = navigator.language?.startsWith('nl') || false;
+
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/wines?price_source=neq.pending&market_price_eur=not.is.null&select=name,producer,vintage,region,country,colour,market_price_eur&order=market_price_eur.desc&limit=50`,
+        { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` } }
+      );
+      const wines = await res.json();
+      const selection = wines.filter(w => w.market_price_eur >= 30 && w.market_price_eur <= 300).slice(0, 5);
+
+      // Update demo sectie header
+      const title = document.getElementById('live-steals-title');
+      if (title) title.textContent = isNL ? 'Wijnen om naar te zoeken' : 'Wines worth scanning for';
+
+      // Vul demo sectie
+      renderLiveSteals(selection, isNL);
+
+      // Vul hero scan card met andere selectie
+      renderHeroCard(wines.filter(w => w.market_price_eur >= 20).slice(0, 4), isNL);
+
+    } catch(e) {
+      document.getElementById('live-steals-list').innerHTML =
+        `<div style="padding:2rem;text-align:center;font-size:0.82rem;color:var(--muted,#6B5E52);">
+          ${isNL ? 'Scan een wijnkaart om steals te ontdekken' : 'Scan a wine list to discover steals'} →
+        </div>`;
+      document.getElementById('hero-wine-list').innerHTML =
+        `<div style="padding:1.5rem;text-align:center;font-size:0.75rem;color:var(--muted);">—</div>`;
+    }
+  }
+
+  function renderHeroCard(wines, isNL) {
+    const list = document.getElementById('hero-wine-list');
+    if (!list || !wines.length) return;
+    list.innerHTML = wines.map(w => `
+      <div class="wine-item">
+        <div>
+          <div class="wine-name-card">${w.name}</div>
+          <div class="wine-meta-card">${[w.producer, w.vintage].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="wine-right">
+          <div class="wine-price">${isNL ? 'markt' : 'market'} ~€${w.market_price_eur}</div>
+          <div class="score-bar"><div class="score-fill" style="width:${Math.min(90, Math.round(w.market_price_eur / 3))}%"></div></div>
+        </div>
+      </div>
+    `).join('');
+    const count = document.getElementById('hero-steals-count');
+    if (count) count.textContent = `${wines.length} ${isNL ? 'wijnen in database' : 'wines in database'}`;
+  }
+
+  function renderLiveSteals(wines, isNL) {
+    const list = document.getElementById('live-steals-list');
+
+    if (!wines.length) {
+      list.innerHTML = `<div style="padding:1.5rem;text-align:center;font-size:0.82rem;color:var(--muted,#6B5E52);">
+        ${isNL ? 'Nog geen data beschikbaar.' : 'No data available yet.'}
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = wines.map(w => {
+      const regionStr = [w.producer, w.vintage, w.region]
+        .filter(Boolean).join(' · ').toUpperCase();
+
+      return `
+        <div class="result-row">
+          <div class="steal-bar none"></div>
+          <div class="r-name">
+            <div class="r-wine">${w.name}</div>
+            <div class="r-region">${regionStr}</div>
+          </div>
+          <div class="r-prices">
+            <div class="r-market" style="font-size:0.75rem;">${isNL ? 'marktwaarde' : 'market value'} ~€${w.market_price_eur}</div>
+          </div>
+          <div class="score-circle" style="background:var(--cream);color:var(--muted);border:1px solid var(--border);">?</div>
+        </div>
+      `;
+    }).join('') + `
+      <div style="padding:1rem 1.25rem;border-top:0.5px solid var(--border);font-size:0.75rem;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.05em;">
+        ${isNL
+          ? '🔍 Scan een wijnkaart om echte steal scores te zien'
+          : '🔍 Scan a wine list to see real steal scores'}
+      </div>
+    `;
+  }
   </script>
 </body>
 </html>
