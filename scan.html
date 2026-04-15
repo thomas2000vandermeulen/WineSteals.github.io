@@ -493,6 +493,28 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
      - "Barolo DOCG - Fontanafredda 2018 - €110"
      - "Rías Baixas Albariño Do Ferreiro 2022 €42"
   ── */
+  // Flesformaat detecteren en factor teruggeven t.o.v. 750ml
+  function detectBottleFormat(line) {
+    const l = line.toLowerCase();
+    // Halve fles (375ml)
+    if (/\(0[,.]375\s*l?\)|\b0[,.]375\b|1\/2\s*fles|halve\s*fles|half\s*bottle|\(0[,.]5\s*l\)/.test(l))
+      return { label: '½ fles', factor: 0.5 };
+    // Piccolo (187ml)
+    if (/\(0[,.]187\s*l?\)|\b0[,.]187\b/.test(l))
+      return { label: 'piccolo', factor: 0.25 };
+    // Vin Jaune formaat (620ml)
+    if (/\(0[,.]62\s*l\)/.test(l))
+      return { label: '620ml', factor: 0.83 };
+    // Magnum (1.5L)
+    if (/\bmagnum\b|\(1[,.]5\s*l\)|\b1[,.]5\s*l/.test(l))
+      return { label: 'magnum', factor: 2 };
+    // Dubbele magnum / Jeroboam (3L)
+    if (/\bdubbelmagnum\b|\bjeroboam\b|\(3\s*l\)|\bdubbelmag\b/.test(l))
+      return { label: '3L', factor: 4 };
+    // Standaard 750ml
+    return { label: null, factor: 1 };
+  }
+
   function parseWineText(text) {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
     const wines = [];
@@ -500,8 +522,9 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
     for (const line of lines) {
       if (line.match(/^[A-Z\s\/\-&]+$/) && line.length < 35) continue;
       if (line.startsWith('*') && line.length < 20) continue;
-      // Skip halve flesjes
-      if (line.match(/\(0[,.][135678]\d*\s*l\)|1\/2\s*fles|halve\s*fles|0,375|0,187/i)) continue;
+
+      // Flesformaat detecteren
+      const bottle = detectBottleFormat(line);
 
       let priceMatch = line.match(/\u20ac\s?(\d+[.,]?\d*)/);
       if (!priceMatch) priceMatch = line.match(/\s(\d{2,4}(?:[.,]\d{1,2})?)\s*\*?\s*$/);
@@ -542,7 +565,7 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       producer = producer.replace(grapeKw, '').replace(/[\u2018\u2019\u201c\u201d'"]/g, '').trim();
 
       if (name.length < 3) continue;
-      wines.push({ raw: line, name, producer, vintage: isNV ? null : vintage, listPrice: price, isNV });
+      wines.push({ raw: line, name, producer, vintage: isNV ? null : vintage, listPrice: price, isNV, bottleLabel: bottle.label, bottleFactor: bottle.factor });
     }
     return wines;
   }
@@ -830,7 +853,12 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       // Resultaten bouwen
       scanResults = allMatches.map(({ parsed: p, db }) => {
         const marketPrice = db ? db.market_price_eur : null;
-        const score = db ? calculateScore(p.listPrice, marketPrice) : null;
+        const isStandardBottle = !p.bottleLabel; // null = 750ml standaard
+
+        // Alleen score berekenen voor standaard 750ml flessen
+        // Andere formaten: geen vergelijking mogelijk met database
+        const score = (db && isStandardBottle) ? calculateScore(p.listPrice, marketPrice) : null;
+
         return {
           name: db ? db.name : p.name,
           producer: db ? db.producer : p.producer,
@@ -838,12 +866,13 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
           region: db ? [db.region, db.country].filter(Boolean).join(' · ') : '',
           type: db ? db.colour : 'red',
           listPrice: p.listPrice,
-          marketPrice,
+          marketPrice: isStandardBottle ? marketPrice : null,
           score: score ?? 50,
-          matched: !!db,
+          matched: !!db && isStandardBottle,
           criticScore: db?.critic_score,
           rawName: p.name,
-          rawProducer: p.producer
+          rawProducer: p.producer,
+          bottleLabel: p.bottleLabel  // bijv. '½ fles', 'magnum' — null = normaal
         };
       });
 
@@ -986,15 +1015,24 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
             <div class="result-wine">${w.name}</div>
             <div class="result-region">${regionStr}</div>
             ${isSteal ? `<span class="steal-badge-sm">${lang === 'nl' ? 'Koopje' : 'Steal'}</span>` : ''}
-            ${!w.matched ? `<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:0.06em;">${lang==='nl'?'niet herkend':'not recognised'}</span>` : ''}
+            ${w.bottleLabel ? `<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--gold);background:rgba(201,168,76,0.12);padding:1px 6px;border-radius:1px;letter-spacing:0.06em;">${w.bottleLabel}</span>` : ''}
+            ${!w.matched && !w.bottleLabel ? `<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:0.06em;">${lang==='nl'?'niet herkend':'not recognised'}</span>` : ''}
           </div>
           <div class="result-prices">
             <div class="result-list-price">€${w.listPrice}</div>
-            ${w.marketPrice ? `<div class="result-market-price ${cheaper ? 'cheaper' : ''}">
-              ${c.market} ~€${w.marketPrice}${cheaper ? ` (€${diff} ${lang==='nl'?'goedkoper':'cheaper'})` : ''}
-            </div>` : `<div class="result-market-price" style="color:var(--muted);font-style:italic;">—</div>`}
+            ${w.bottleLabel
+              ? `<div class="result-market-price" style="color:var(--muted);font-style:italic;">${lang==='nl'?'geen vergelijking':'no comparison'}</div>`
+              : w.marketPrice
+                ? `<div class="result-market-price ${cheaper ? 'cheaper' : ''}">${c.market} ~€${w.marketPrice}${cheaper ? ` (€${diff} ${lang==='nl'?'goedkoper':'cheaper'})` : ''}</div>`
+                : `<div class="result-market-price" style="color:var(--muted);font-style:italic;">—</div>`
+            }
           </div>
-          ${w.matched ? `<div class="score-bubble ${scoreClass}">${w.score}</div>` : `<div class="score-bubble low">?</div>`}
+          ${w.bottleLabel
+            ? `<div class="score-bubble low" style="opacity:0.35;">—</div>`
+            : w.matched
+              ? `<div class="score-bubble ${scoreClass}">${w.score}</div>`
+              : `<div class="score-bubble low">?</div>`
+          }
         </div>
       `;
     }).join('');
