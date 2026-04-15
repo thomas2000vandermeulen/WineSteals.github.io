@@ -409,11 +409,11 @@
       <div class="wine-bg-pattern"></div>
       <div class="scan-card">
         <div class="scan-header">
-          <span id="hero-scan-label">WineSteals database</span>
+          <span id="hero-scan-label"><span class="txt-en">WineSteals database</span><span class="txt-nl" style="display:none">WineSteals database</span></span>
           <span><span class="pulse-dot"></span><span data-key="scanning"></span></span>
         </div>
         <div id="hero-wine-list">
-          <div style="padding:1.5rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted,#6B5E52);">Laden...</div>
+          <div style="padding:1.5rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted,#6B5E52);"><span class="txt-en" style="display:none">Loading...</span><span class="txt-nl">Laden...</span></div>
         </div>
         <div class="scan-footer">
           <span data-key="winesAnalysed"></span>
@@ -906,13 +906,17 @@
     showCookieBanner();
     loadLiveSteals();
 
+    // Initialiseer taal spans op basis van huidige taal
+    document.querySelectorAll('.txt-nl').forEach(el => el.style.display = lang === 'nl' ? '' : 'none');
+    document.querySelectorAll('.txt-en').forEach(el => el.style.display = lang === 'en' ? '' : 'none');
+
   }); // end DOMContentLoaded
 
   /* ── LIVE STEALS VANUIT SUPABASE ── */
   async function loadLiveSteals() {
     const SB_URL = 'https://kdhczlabjecqxlyuxprl.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGN6bGFiamVjcXhseXV4cHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDI1MzEsImV4cCI6MjA5MTU3ODUzMX0.9vpr3P0Q6xhs_99nLsU_yE3Ht6prPe9cPjUrt0f5mX4';
-    const isNL = (typeof lang !== 'undefined' ? lang : (navigator.language?.startsWith('nl') ? 'nl' : 'en')) === 'nl';
+    const isNL = (window._wsLang || lang || 'en') === 'nl';
 
     try {
       const res = await fetch(

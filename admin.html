@@ -383,9 +383,17 @@
     const list = document.getElementById('pending-list');
     const count = document.getElementById('pending-count');
 
-    if (!wines.length) { section.style.display = 'none'; return; }
-
+    // Sectie altijd tonen — ook als leeg
     section.style.display = 'block';
+
+    if (!wines.length) {
+      count.textContent = '0 te doen';
+      list.innerHTML = `<div style="padding:1rem 1.25rem;font-size:0.82rem;color:var(--muted);font-style:italic;">
+        ✓ Geen wijnen zonder prijs — alles is up to date.
+      </div>`;
+      return;
+    }
+
     count.textContent = `${wines.length} te doen`;
 
     list.innerHTML = wines.map(w => {
