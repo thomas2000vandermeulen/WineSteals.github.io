@@ -395,29 +395,29 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       navBack: '← Terug',
       eyebrow: 'Wijn scanner',
       title: 'Scan een <em>wijnkaart</em>',
-      sub: 'Upload een foto of PDF, of plak de wijnkaart als tekst. We scoren elke fles en vinden de koopjes.',
+      sub: 'Upload een foto of PDF, of plak de wijnkaart als tekst. We scoren elke fles en vinden de steals.',
       uploadTitle: 'Sleep je wijnkaart hierheen',
       uploadSub: 'Slepen of klikken om te bladeren',
       orText: 'of typ / plak de wijnkaart',
       textareaLabel: 'Plak wijnkaart tekst',
       restLabel: 'Restaurantnaam (optioneel)',
       restPlaceholder: 'bijv. Bord\'Eau, Amsterdam',
-      scanBtn: 'Scan op koopjes',
+      scanBtn: 'Scan op steals',
       noteText: '<strong>Demomodus:</strong> Deze scanner gebruikt voorbeeldgegevens om te laten zien hoe WineSteals werkt. De AI-prijsmotor komt binnenkort — meld je aan voor de wachtlijst.',
       procTitle: 'Wijnkaart wordt geanalyseerd…',
       step1: 'Wijnkaart lezen',
       step2: 'Wijnen en jaargangen identificeren',
       step3: 'Marktprijzen ophalen',
-      step4: 'Koopjesscores berekenen',
+      step4: 'Steal scores berekenen',
       resultsTitle: 'Resultaten',
       statTotalLabel: 'Wijnen geanalyseerd',
-      statStealsLabel: 'Koopjes gevonden',
-      statBestLabel: 'Beste koopjesscore',
+      statStealsLabel: 'Steals gevonden',
+      statBestLabel: 'Beste steal score',
       filterAll: 'Alle wijnen',
-      filterSteals: 'Alleen koopjes',
+      filterSteals: 'Alleen steals',
       filterRed: 'Rood',
       filterWhite: 'Wit',
-      rankedBy: 'Gerangschikt op koopjesscore',
+      rankedBy: 'Gerangschikt op steal score',
       newScan: '+ Nieuwe scan',
       market: 'markt',
       resultsNote: '<strong>Dit zijn demoresultaten.</strong> De echte WineSteals-motor vergelijkt je wijnkaart met actuele marktprijzen van Wine-Searcher, Vivino en Nederlandse retailers. <a href="index.html#waitlist" style="color:var(--wine);">Meld je aan</a> voor vroege toegang.',
@@ -1014,7 +1014,7 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
           <div class="result-name">
             <div class="result-wine">${w.name}</div>
             <div class="result-region">${regionStr}</div>
-            ${isSteal ? `<span class="steal-badge-sm">${lang === 'nl' ? 'Koopje' : 'Steal'}</span>` : ''}
+            ${isSteal ? `<span class="steal-badge-sm">${lang === 'nl' ? 'Steal' : 'Steal'}</span>` : ''}
             ${w.bottleLabel ? `<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--gold);background:rgba(201,168,76,0.12);padding:1px 6px;border-radius:1px;letter-spacing:0.06em;">${w.bottleLabel}</span>` : ''}
             ${!w.matched && !w.bottleLabel ? `<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:0.06em;">${lang==='nl'?'niet herkend':'not recognised'}</span>` : ''}
           </div>

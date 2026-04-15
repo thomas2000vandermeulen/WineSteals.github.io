@@ -449,7 +449,7 @@
           <div class="live-feed-header"><span class="pulse-dot"></span><span data-key="liveUpdates"></span></div>
           <div id="live-feed-items">
             <div style="padding:1rem 0;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;color:rgba(255,255,255,0.3);text-align:center;">
-              Scan een wijnkaart om hier te verschijnen
+              <span class="txt-nl">Scan een wijnkaart om hier te verschijnen</span><span class="txt-en" style="display:none">Scan a wine list to appear here</span>
             </div>
           </div>
           <div class="feed-footer" data-key="lastUpdated"></div>
@@ -612,6 +612,11 @@
         if (el) el.classList.toggle('active', id.includes(l));
       });
       if (window._wsRender) window._wsRender(l);
+      // Dynamische content hertalen
+      if (typeof loadLiveSteals === 'function') loadLiveSteals();
+      // Feed placeholder tekst
+      document.querySelectorAll('.txt-nl').forEach(el => el.style.display = l === 'nl' ? '' : 'none');
+      document.querySelectorAll('.txt-en').forEach(el => el.style.display = l === 'en' ? '' : 'none');
     }
 
     /* ── HAMBURGER ──────────────────────────────── */
@@ -737,7 +742,7 @@
       },
       nl: {
         nav1: 'Hoe het werkt',
-        nav2: 'Live koopjes',
+        nav2: 'Live steals',
         nav3: 'Wachtlijst',
         navCta: 'Vroege toegang ↗',
         heroEyebrow: 'Wijn-intelligentie · Amsterdam',
@@ -748,15 +753,15 @@
         trust1: 'Start in Amsterdam',
         trust2: 'Gratis vroege toegang',
         scanning: 'Scannen',
-        stealBadge: 'Koopje',
+        stealBadge: 'Steal',
         winesAnalysed: '18 wijnen geanalyseerd',
-        stealsFound: '2 koopjes gevonden',
+        stealsFound: '2 steals gevonden',
         stat1: 'Gemiddelde restaurantopslag op wijn',
         stat2: 'Van de wijnen is echt scherp geprijsd',
         stat3: 'Om een volledige wijnkaart te scannen',
         crawlerEyebrow: 'AI-gestuurde crawler',
-        crawlerTitle: 'Wij <em>jagen op koopjes</em> nog voor jij zit',
-        crawlerDesc: 'Onze AI-crawler monitort actief de wijnkaarten van Amsterdamse restaurants — scant menu\'s, detecteert updates en scoort elke fles dagelijks. Je krijgt een melding zodra er een koopje verschijnt.',
+        crawlerTitle: 'Wij <em>jagen op steals</em> nog voor jij zit',
+        crawlerDesc: 'Onze AI-crawler monitort actief de wijnkaarten van Amsterdamse restaurants — scant menu\'s, detecteert updates en scoort elke fles dagelijks. Je krijgt een melding zodra er een steal verschijnt.',
         crawlerStat1: 'Amsterdamse restaurants gevolgd',
         crawlerStat2num: 'Dagelijks',
         crawlerStat2: 'Scanfrequentie',
@@ -770,12 +775,12 @@
         f1title: 'Foto of PDF uploaden',
         f1desc: 'Maak een foto van de wijnkaart aan tafel, of upload van tevoren een PDF-menu',
         f2title: 'AI-crawler — altijd actief',
-        f2desc: 'Onze crawler monitort 240+ Amsterdamse restaurants en stuurt een melding als koopjes verschijnen',
-        f3title: 'Koopjesscore 0–100',
+        f2desc: 'Onze crawler monitort 240+ Amsterdamse restaurants en stuurt een melding als steals verschijnen',
+        f3title: 'Steal score 0–100',
         f3desc: 'Een eenvoudige score die laat zien hoe scherp de restaurantprijs is ten opzichte van de markt',
         f4title: 'Opslaan per restaurant',
         f4desc: 'Bouw je persoonlijke kaart van restaurants met de beste wijnkaarten',
-        rankedBy: 'Gerangschikt op koopjesscore',
+        rankedBy: 'Gerangschikt op steal score',
         market: 'markt',
         howEyebrow: 'Hoe het werkt',
         howTitle: 'Drie stappen naar je volgende geweldige fles',
@@ -785,7 +790,7 @@
         step2title: 'Wij prijzen elke fles',
         step2desc: 'Ons systeem vergelijkt elke wijn met marktprijzen bij retailers, veilingen en groothandels — rekening houdend met vintage en formaat.',
         step2tag: 'Wine-Searcher · Vivino',
-        step3title: 'Bestel het koopje',
+        step3title: 'Bestel de steal',
         step3desc: 'Ontvang een gerangschikte lijst van de scherpste prijzen. Filter op kleur, regio of budget. Bestel met vertrouwen.',
         step3tag: 'Directe resultaten',
         ctaTitle: 'Nooit meer teveel betalen voor <em>wijn</em>',
@@ -799,11 +804,11 @@
         storyEyebrow: 'Ons verhaal',
         storyTitle: 'Een <em>persoonlijke passie</em> werd een platform',
         storyP1: 'Mijn vader en ik zijn altijd al dol geweest op het ontdekken van geweldige wijnen tijdens het uit eten gaan. Jarenlang doorzochten we wijnkaarten van restaurants, pagina na pagina, op zoek naar de verborgen deals die de meeste mensen gewoon voorbij lopen.',
-        storyQuote: 'Wat als er een platform was dat deze verborgen wijnkoopjes automatisch kon opsporen?',
+        storyQuote: 'Wat als er een platform was dat deze verborgen wine steals automatisch kon opsporen?',
         storyP2: 'Op een avond vonden we een Ceretto Barolo 2016 op een restaurantwijnkaart voor €120 — terwijl een nieuwer 2020 vintage in de winkel voor €180 werd verkocht. Een ouder, beter vintage, voor een fractie van wat je zou verwachten te betalen. Dat moment was de vonk voor alles.',
         storyP3: 'WineSteals is gebouwd voor iedereen die van wijn houdt maar er niet voor wil overbetalen. Het is het hulpmiddel dat mijn vader en ik altijd al hadden gewild.',
         storyFloatTag: 'De fles die alles begon',
-        storyBottleLabel: 'Het koopje dat WineSteals inspireerde',
+        storyBottleLabel: 'De steal die WineSteals inspireerde',
         storyRestaurantPrice: 'Restaurantprijs',
         storyRetailPrice: 'Winkelprijs',
         storySaving: '€60 goedkoper · ouder & beter vintage',
@@ -907,7 +912,7 @@
   async function loadLiveSteals() {
     const SB_URL = 'https://kdhczlabjecqxlyuxprl.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGN6bGFiamVjcXhseXV4cHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDI1MzEsImV4cCI6MjA5MTU3ODUzMX0.9vpr3P0Q6xhs_99nLsU_yE3Ht6prPe9cPjUrt0f5mX4';
-    const isNL = navigator.language?.startsWith('nl') || false;
+    const isNL = (typeof lang !== 'undefined' ? lang : (navigator.language?.startsWith('nl') ? 'nl' : 'en')) === 'nl';
 
     try {
       const res = await fetch(
