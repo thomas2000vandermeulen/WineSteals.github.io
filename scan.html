@@ -467,6 +467,10 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
   const SUPABASE_URL = 'https://kdhczlabjecqxlyuxprl.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGN6bGFiamVjcXhseXV4cHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDI1MzEsImV4cCI6MjA5MTU3ODUzMX0.9vpr3P0Q6xhs_99nLsU_yE3Ht6prPe9cPjUrt0f5mX4';
 
+  // Railway AI scanner — wordt ingevuld zodra Railway live is
+  // Zet op null om de regex parser te gebruiken als fallback
+  const RAILWAY_URL = 'https://winestealsgithubio-production.up.railway.app';
+
   /* ── STATE ── */
   let currentFilter = 'all';
   let scannedRestaurant = '';
@@ -881,10 +885,42 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       fill.style.width = '15%';
       await delay(400);
 
-      // Stap 2 — wijnen identificeren
+      // Stap 2 — wijnen identificeren via AI (of regex als fallback)
       setStep(1);
       fill.style.width = '35%';
-      const parsed = parseWineText(text);
+
+      let parsed = [];
+
+      if (RAILWAY_URL) {
+        // AI parsing via Railway
+        try {
+          const aiRes = await fetch(`${RAILWAY_URL}/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, restaurant: scannedRestaurant })
+          });
+          if (!aiRes.ok) throw new Error(`Railway error: ${aiRes.status}`);
+          const aiData = await aiRes.json();
+          // Zet AI output om naar hetzelfde formaat als de regex parser
+          parsed = aiData.wines.map(w => ({
+            name: w.name,
+            producer: w.producer,
+            vintage: w.vintage,
+            listPrice: w.price,
+            isNV: !w.vintage,
+            bottleLabel: w.bottle_format || null,
+            bottleFactor: w.bottle_format ? (w.bottle_format.includes('½') ? 0.5 : w.bottle_format.toLowerCase().includes('magnum') ? 2 : 1) : 1,
+            raw: `${w.producer} ${w.name} ${w.vintage || 'NV'} €${w.price}`
+          }));
+        } catch (aiErr) {
+          console.warn('AI scan mislukt, val terug op regex:', aiErr.message);
+          parsed = parseWineText(text);
+        }
+      } else {
+        // Regex parser (fallback / ontwikkelmode)
+        parsed = parseWineText(text);
+      }
+
       await delay(300);
 
       if (parsed.length === 0) {
