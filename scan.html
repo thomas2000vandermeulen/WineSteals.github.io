@@ -959,7 +959,11 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
 
         // Alleen score berekenen voor standaard 750ml flessen
         // Andere formaten: geen vergelijking mogelijk met database
-        const score = (db && isStandardBottle) ? calculateScore(p.listPrice, marketPrice) : null;
+        const score = (db && isStandardBottle && marketPrice) ? calculateScore(p.listPrice, marketPrice) : null;
+
+        // Alleen "matched" als er ook echt een marktprijs beschikbaar is
+        // Zonder prijs is een match nutteloos en misleidend
+        const isMatched = !!db && isStandardBottle && !!marketPrice;
 
         return {
           name: db ? db.name : p.name,
@@ -970,11 +974,11 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
           listPrice: p.listPrice,
           marketPrice: isStandardBottle ? marketPrice : null,
           score: score ?? 50,
-          matched: !!db && isStandardBottle,
+          matched: isMatched,
           criticScore: db?.critic_score,
           rawName: p.name,
           rawProducer: p.producer,
-          bottleLabel: p.bottleLabel  // bijv. '½ fles', 'magnum' — null = normaal
+          bottleLabel: p.bottleLabel
         };
       });
 
