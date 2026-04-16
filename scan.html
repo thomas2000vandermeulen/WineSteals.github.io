@@ -652,7 +652,8 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
 
     // Minimum match score om als geldig te beschouwen
     // Zo voorkom je dat een andere producent uit dezelfde appellation wordt gebruikt
-    const MIN_CONFIDENCE = 3;
+    // Hoge drempel — voorkomt false matches
+    const MIN_CONFIDENCE = 6;
 
     function scoreMatch(w) {
       let score = 0;
@@ -664,14 +665,16 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       // NAAM match — zwaarst gewogen
       if (wName === pName) score += 10;
       else if (wName.includes(pName) || pName.includes(wName)) score += 6;
-      else if (nameParts.some(p => wName.includes(p.toLowerCase()))) score += 2;
+      else if (nameParts.some(p => p.length > 3 && wName.includes(p.toLowerCase()))) score += 2;
 
-      // PRODUCENT match — even belangrijk
+      // PRODUCENT match — verplicht als we een producent hebben
       if (producerFirst) {
         if (wProducer.includes(producerFirst.toLowerCase())) score += 8;
         else if (producerSecond && wProducer.includes(producerSecond.toLowerCase())) score += 4;
-        // Straf als producent totaal niet matcht — voorkomt verkeerde match
-        else if (pProducer.length > 2 && !wProducer.includes(pProducer.split(' ')[0].toLowerCase())) score -= 5;
+        else {
+          // Producent matcht NIET → harde straf, match onmogelijk
+          score -= 15;
+        }
       }
 
       // JAARGANG match — bonus
