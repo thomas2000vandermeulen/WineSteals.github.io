@@ -958,31 +958,28 @@ Chambolle-Musigny, Drouhin 2018 — €88"></textarea>
       // Resultaten bouwen
       scanResults = allMatches.map(({ parsed: p, db }) => {
         const marketPrice = db ? db.market_price_eur : null;
-        const isStandardBottle = !p.bottleLabel; // null = 750ml standaard
-
-        // Alleen score berekenen voor standaard 750ml flessen
-        // Andere formaten: geen vergelijking mogelijk met database
+        const isStandardBottle = !p.bottleLabel;
         const score = (db && isStandardBottle && marketPrice) ? calculateScore(p.listPrice, marketPrice) : null;
-
-        // Alleen "matched" als er ook echt een marktprijs beschikbaar is
-        // Zonder prijs is een match nutteloos en misleidend
         const isMatched = !!db && isStandardBottle && !!marketPrice;
 
         return {
-          name: db ? db.name : p.name,
-          producer: db ? db.producer : p.producer,
-          vintage: db ? db.vintage : p.vintage,
-          region: db ? [db.region, db.country].filter(Boolean).join(' · ') : '',
-          type: db ? db.colour : 'red',
+          // Altijd de AI-geparsede naam tonen — NOOIT een andere wijn uit de database
+          // De database levert alleen marktprijs, regio en kleur bij
+          name: p.name,
+          producer: p.producer,
+          vintage: p.vintage,
+          region: isMatched ? [db.region, db.country].filter(Boolean).join(' · ') : '',
+          type: isMatched ? db.colour : 'red',
           listPrice: p.listPrice,
           marketPrice: isStandardBottle ? marketPrice : null,
           score: score ?? 50,
           matched: isMatched,
-          criticScore: db?.critic_score,
+          criticScore: isMatched ? db?.critic_score : null,
           rawName: p.name,
           rawProducer: p.producer,
           bottleLabel: p.bottleLabel
         };
+      });
       });
 
       // Niet-herkende wijnen opslaan als pending in Supabase
